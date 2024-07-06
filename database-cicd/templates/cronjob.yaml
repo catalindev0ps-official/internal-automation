@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .Values.cronjob.name }}
+  labels:
+    app: {{ .Values.cronjob.labels.app }}
+spec:
+  schedule: "{{ .Values.cronjob.schedule }}"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: {{ .Values.cronjob.container.name }}
+            image: {{ .Values.cronjob.container.image }}
+            imagePullPolicy: {{ .Values.cronjob.container.imagePullPolicy }}
+            command: {{ .Values.cronjob.container.command }}
+            args: {{ .Values.cronjob.container.args }}
+            env:
+            {{- range .Values.cronjob.env }}
+            - name: {{ .name }}
+              value: {{ .value }}
+            {{- end }}
+          restartPolicy: {{ .Values.cronjob.restartPolicy }}
