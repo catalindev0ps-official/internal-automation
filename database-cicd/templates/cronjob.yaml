@@ -1,24 +1,44 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: {{ .Values.cronjob.name }}
-  labels:
-    app: {{ .Values.cronjob.labels.app }}
+  name: {{ .Values.name }}
 spec:
-  schedule: "{{ .Values.cronjob.schedule }}"
+  schedule: "{{ .Values.schedule }}" 
   jobTemplate:
     spec:
       template:
         spec:
           containers:
-          - name: {{ .Values.cronjob.container.name }}
-            image: {{ .Values.cronjob.container.image }}
-            imagePullPolicy: {{ .Values.cronjob.container.imagePullPolicy }}
-            command: {{ .Values.cronjob.container.command }}
-            args: {{ .Values.cronjob.container.args }}
+          - name: {{ .Values.container.name }}
+            image: {{ .Values.container.image }}
+            command: {{ .Values.container.command }}
+            args:
+            - "-c"
+            - |
+              sshpass -p $SERVER_PASS ssh -o StrictHostKeyChecking=no $SERVER_USER@$SERVER_IP << EOF
+              cd
+              mkdir -p dumps_from_liha4
+              mysqldump -u $DB_USER -p$DB_PASS $DB_NAME > dumps_from_liha4/dump.sql
+              cp dumps_from_liha4/dump.sql /config
+              exit
+              EOF
             env:
-            {{- range .Values.cronjob.env }}
-            - name: {{ .name }}
-              value: {{ .value }}
-            {{- end }}
-          restartPolicy: {{ .Values.cronjob.restartPolicy }}
+            - name: SERVER_IP
+              value: {{ .Values.env.SERVER_IP }}
+            - name: SERVER_USER
+              value: {{ .Values.env.SERVER_USER }}
+            - name: SERVER_PASS
+              value: {{ .Values.env.SERVER_PASS }}
+            - name: DB_NAME
+              value: {{ .Values.env.DB_NAME }}
+            - name: DB_USER
+              value: {{ .Values.env.DB_USER }}
+            - name: DB_PASS
+              value: {{ .Values.env.DB_PASS }}
+            volumeMounts:
+            - name: config
+              mountPath: {{ .Values.container.volumeMounts.config.mountPath }}
+          volumes:
+          - name: config
+            emptyDir: {}
+          restartPolicy: {{ .Values.restartPolicy }}
