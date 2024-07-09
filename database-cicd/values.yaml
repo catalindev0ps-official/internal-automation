@@ -1,15 +1,17 @@
-cronjob:
-  name: "my-cronjob"
-  labels:
-    app: "my-cron-app"
-  schedule: "0 0 * * *"  # Daily at midnight
-  container:
-    name: "my-cron-container"
-    image: "ubuntu:latest"
-    imagePullPolicy: "IfNotPresent"
-    command: ["/bin/sh"]
-    args: ["-c", "echo 'Hello, World!'"]
-  env:
-    - name: "MY_ENV_VAR"
-      value: "my-env-value"
-  restartPolicy: "OnFailure"
+name: ssh-cronjob
+schedule: "*/1 * * * *"
+container:
+  name: ssh
+  image: ictu/sshpass:latest
+  command: ["/bin/sh"]
+  volumeMounts:
+    config:
+      mountPath: /config
+env:
+  SERVER_IP: 192.168.0.157
+  SERVER_USER: catalin
+  SERVER_PASS: web
+  DB_NAME: lala
+  DB_USER: admin
+  DB_PASS: web
+restartPolicy: OnFailure
